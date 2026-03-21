@@ -398,29 +398,6 @@
     },
     {
       "source": {
-        "sourceId": "au-bom-en",
-        "byLanguage": [
-          {
-            "code": "en",
-            "name": "Australia: Bureau of Meteorology",
-            "logo": ""
-          }
-        ],
-        "guid": "urn:oid:2.49.0.0.36.0",
-        "registerUrl": "https://alertingauthority.wmo.int/authorities.php?recId=6",
-        "authorName": "",
-        "authorEmail": "",
-        "sourceIsOfficial": true,
-        "capAlertFeed": "https://severeweather.wmo.int/v2/cap-alerts/au-bom-en/rss.xml",
-        "capAlertFeedStatus": "operating",
-        "authorityCountry": "au",
-        "authorityAbbrev": "bom",
-        "feedSource": "FPAS",
-        "format": "rss or atom"
-      }
-    },
-    {
-      "source": {
         "sourceId": "no-met-no",
         "capAlertFeedStatus": "redundant to no-met-en",
         "override": true,
