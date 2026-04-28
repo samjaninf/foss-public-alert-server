@@ -20,7 +20,7 @@ autotest:
       alias: db
       variables:
         POSTGRES_DB: foss-public-alert-server
-    - name: rabbitmq
+    - name: rabbitmq:4.2
       alias: amqp
   image: python:3.10-bullseye
   before_script:

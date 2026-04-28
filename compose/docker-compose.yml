@@ -22,7 +22,7 @@ services:
       - db:/var/lib/postgresql/data
 
   amqp:
-    image: rabbitmq
+    image: rabbitmq:4.2 # FIXME version pin until celery / kombu fixes support for >= 4.3
     restart: always
 
   aggregator:
