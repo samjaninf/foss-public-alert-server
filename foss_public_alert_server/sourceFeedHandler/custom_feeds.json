@@ -2,6 +2,27 @@
   "sources": [
     {
       "source": {
+        "sourceId": "jp-rsmctk-en",
+        "byLanguage": [
+          {
+            "code": "en",
+            "name": "Japan: Japan Meteorological Agency (RSMC Tokyo - Typhoon Center)",
+            "logo": ""
+          }
+        ],
+        "authorName": "Japan Meteorological Agency",
+        "authorEmail": "rsmc-tokyo@met.kishou.go.jp",
+        "sourceIsOfficial": true,
+        "capAlertFeed": "https://www.data.jma.go.jp/cap-rsmctk/atom.xml",
+        "capAlertFeedStatus": "operating",
+        "authorityCountry": "jp",
+        "authorityAbbrev": "jma",
+        "feedSource": "FPAS",
+        "format": "embedded CAP"
+      }
+    },
+    {
+      "source": {
         "sourceId": "be-bealert-xx",
         "byLanguage": [
           {
