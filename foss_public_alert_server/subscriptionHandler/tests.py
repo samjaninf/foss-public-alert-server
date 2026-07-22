@@ -238,7 +238,7 @@ class SubscriptionHandlerTestsCase(TestCase):
         prev_count = Subscription.objects.count()
         remove_old_subscription()
         self.assertEqual(Subscription.objects.count(), prev_count)
-        sub = Subscription(
+        subOld = Subscription(
             token="https://unifiedpush.kde.org/upezVkNWZjNTM5?up=1",
             bounding_box=Polygon.from_bbox((8.591, 52.295, 12.063, 52.789)),
             push_service=Subscription.PushServices.UNIFIED_PUSH_ENCRYPTED,
@@ -247,7 +247,40 @@ class SubscriptionHandlerTestsCase(TestCase):
             auth_key="ns9swjbbKTEN12VGW_tJqA",
             user_agent="FPAS/1.0.0 (testing)"
         )
-        sub.save()
-        self.assertEqual(Subscription.objects.count(), prev_count + 1)
+        subOld.save()
+        subNew = Subscription(
+            token="https://unifiedpush.kde.org/upezVkNWZjNTM5?up=1",
+            bounding_box=Polygon.from_bbox((8.591, 52.295, 12.063, 52.789)),
+            push_service=Subscription.PushServices.UNIFIED_PUSH_ENCRYPTED,
+            last_heartbeat=datetime.datetime.now(datetime.timezone.utc),
+            p256dh_key="BInn4ytZr6wQ960L3sQ6tfmrQzNQoEhj_I-0i2DRcL-_u0aU2vSgLuhLKyzGnFkmKDhfnZ7pwcsOEsqy-fDbzh0",
+            auth_key="ns9swjbbKTEN12VGW_tJqA",
+            user_agent="FPAS/1.0.0 (testing)"
+        )
+        subNew.save()
+        # Note: the DB fixture for the unit tests has a 10 days expiry
+        subJustExpired = Subscription(
+            token="https://unifiedpush.kde.org/upezVkNWZjNTM5?up=1",
+            bounding_box=Polygon.from_bbox((8.591, 52.295, 12.063, 52.789)),
+            push_service=Subscription.PushServices.UNIFIED_PUSH_ENCRYPTED,
+            last_heartbeat=datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=11),
+            p256dh_key="BInn4ytZr6wQ960L3sQ6tfmrQzNQoEhj_I-0i2DRcL-_u0aU2vSgLuhLKyzGnFkmKDhfnZ7pwcsOEsqy-fDbzh0",
+            auth_key="ns9swjbbKTEN12VGW_tJqA",
+            user_agent="FPAS/1.0.0 (testing)"
+        )
+        subJustExpired.save()
+        subAboutToExpire = Subscription(
+            token="https://unifiedpush.kde.org/upezVkNWZjNTM5?up=1",
+            bounding_box=Polygon.from_bbox((8.591, 52.295, 12.063, 52.789)),
+            push_service=Subscription.PushServices.UNIFIED_PUSH_ENCRYPTED,
+            last_heartbeat=datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=9),
+            p256dh_key="BInn4ytZr6wQ960L3sQ6tfmrQzNQoEhj_I-0i2DRcL-_u0aU2vSgLuhLKyzGnFkmKDhfnZ7pwcsOEsqy-fDbzh0",
+            auth_key="ns9swjbbKTEN12VGW_tJqA",
+            user_agent="FPAS/1.0.0 (testing)"
+        )
+        subAboutToExpire.save()
+        self.assertEqual(Subscription.objects.count(), prev_count + 4)
         remove_old_subscription()
-        self.assertEqual(Subscription.objects.count(), prev_count)
+        self.assertEqual(Subscription.objects.count(), prev_count + 2)
+        self.assertIsNotNone(Subscription.objects.get(id=subNew.id))
+        self.assertIsNotNone(Subscription.objects.get(id=subAboutToExpire.id))
