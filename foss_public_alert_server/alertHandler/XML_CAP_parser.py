@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 CAP_MIMETYPES = ['application/common-alerting-protocol+xml', 'application/cap+xml']
-BROKEN_CHAIN_FEEDS = ['sa-ncm-ar', 'sa-ncm-en', 'gh-gmet-en', 'za-saws-en']
+BROKEN_CHAIN_FEEDS = ['za-saws-en']
 BROKEN_CHAIN_FILE = os.path.join(settings.BASE_DIR, 'alertHandler/data/broken-chains.pem')
 
 
