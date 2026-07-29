@@ -20,7 +20,7 @@ class LUAlertParser(AbstractCAPParser):
         response: dict = requests.get(self.feed_source.cap_alert_feed, timeout=10).json()
         for alerts in response:
             try:
-                cap_ident = alerts['identifier']
+                cap_ident = alerts['_id']
                 sent_time = datetime.datetime.utcfromtimestamp(alerts['sent'] / 1000)
                 if len(Alert.objects.filter(source_id=self.feed_source.source_id, alert_id=cap_ident, issue_time=sent_time)) == 1:
                     self.record_unchanged_alert(cap_ident)
