@@ -168,6 +168,8 @@ def add_new_subscription(request):
             case "UNIFIED_PUSH_ENCRYPTED":
                 validateUnifiedPushToken(token)
                 s = unified_push_encrpted.create_subscription(token, bbox, data, user_agent)
+                if isinstance(s, HttpResponse):
+                    return s
                 test_push = unified_push_encrpted.send_notification(s.token,
                                                     json.dumps(msg),
                                                     auth_key=s.auth_key,
@@ -254,7 +256,13 @@ def update_subscription(request):
         return HttpResponseBadRequest("invalid input")
 
     # if request contains token, handle update request
-    token = request.GET.get("token")
+    data = {}
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        # empty body is technically allowed if we just update the heartbeat
+        pass
+    token = data.get("token")
 
     if token is None:
         # if token is none, the request is just to update the subscription
@@ -267,14 +275,14 @@ def update_subscription(request):
             match push_service:
                 case Subscription.PushServices.UNIFIED_PUSH:
                     validateUnifiedPushToken(token)
-                    return unified_push.update_subscription(request)
+                    return unified_push.update_subscription(data)
                 case Subscription.PushServices.UNIFIED_PUSH_ENCRYPTED:
                     validateUnifiedPushToken(token)
-                    return unified_push_encrpted.update_subscription(token, request, subscription_id)
+                    return unified_push_encrpted.update_subscription(token, data, subscription_id)
                 case Subscription.PushServices.APN:
-                    return apn.update_subscription(request)
+                    return apn.update_subscription(data)
                 case Subscription.PushServices.FIREBASE:
-                    return firebase.update_subscription(request)
+                    return firebase.update_subscription(data)
                 case _:
                     logger.debug("Not supported push service")
                     return HttpResponseBadRequest('something went wrong')

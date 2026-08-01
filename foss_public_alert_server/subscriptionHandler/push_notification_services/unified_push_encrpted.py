@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Nucleus <nucleus-ffm@posteo.de>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-from django.http import HttpResponseBadRequest, HttpResponse, HttpResponseNotFound
+from django.http import HttpResponseBadRequest, HttpResponse
 from pywebpush import webpush, WebPushException
 from django.conf import settings
 import logging
@@ -36,12 +36,16 @@ def create_subscription(token, bbox, data, user_agent):
     # load data from request
     p256dh_key = data['p256dh_key']
     auth_key = data['auth_key']
+    vapid_public_key = data.get('vapid_public_key', settings.WEB_PUSH_CONFIG_PUBLIC_KEY)
 
     if p256dh_key == "" or auth_key == "":
         return HttpResponseBadRequest('invalid or missing parameters')
+    if vapid_public_key != settings.WEB_PUSH_CONFIG_PUBLIC_KEY:
+        return HttpResponseBadRequest('unknown VAPID key')
 
     return Subscription(token=token, bounding_box=bbox, push_service=Subscription.PushServices.UNIFIED_PUSH_ENCRYPTED,
-                        last_heartbeat=datetime.now(timezone.utc), p256dh_key=p256dh_key, auth_key=auth_key, user_agent=user_agent)
+                        last_heartbeat=datetime.now(timezone.utc), p256dh_key=p256dh_key, auth_key=auth_key, user_agent=user_agent,
+                        vapid_public_key=vapid_public_key)
 
 
 def send_notification(endpoint, payload, auth_key, p256dh_key, persist_failures: bool = True) -> Response or None:
@@ -116,7 +120,7 @@ def send_notification(endpoint, payload, auth_key, p256dh_key, persist_failures:
         raise PushNotificationException("failure")
 
 
-def update_subscription(token, request, subscription_id:str) -> HttpResponse:
+def update_subscription(token, data, subscription_id: str) -> HttpResponse:
     """
     Update the push notification config for the given subscription.
 
@@ -131,12 +135,18 @@ def update_subscription(token, request, subscription_id:str) -> HttpResponse:
     :param subscription_id: the id of the subscription to update
     :return: HttpResponseBadRequest if there are missing parameters / invalid input, HttpResponse if the update was successful.
     """
-    p256dh_key = request.GET.get("p256dh_key")
-    auth_key =  request.GET.get("auth_key")
-    if p256dh_key == "" or auth_key == "":
+    p256dh_key = data.get("p256dh_key")
+    auth_key = data.get("auth_key")
+    vapid_public_key = data.get("vapid_public_key")
+    if p256dh_key is None or auth_key is None:
         return HttpResponseBadRequest('invalid or missing parameters')
+    if vapid_public_key is not None and vapid_public_key != settings.WEB_PUSH_CONFIG_PUBLIC_KEY:
+        return HttpResponseBadRequest('unknown VAPID key')
     try:
-        Subscription.objects.filter(id=subscription_id).update(token=token, auth_key=auth_key, p256dh_key=p256dh_key)
+        if vapid_public_key is not None:
+            Subscription.objects.filter(id=subscription_id).update(token=token, auth_key=auth_key, p256dh_key=p256dh_key, vapid_public_key=vapid_public_key)
+        else:
+            Subscription.objects.filter(id=subscription_id).update(token=token, auth_key=auth_key, p256dh_key=p256dh_key)
         return HttpResponse("Subscription and push config successfully updated")
     except Exception as e:
         logger.error(f"Can not update subscription: {e}")

@@ -25,6 +25,8 @@ class Subscription(models.Model):
     error_counter = models.IntegerField(default=0)
     error_messages = models.CharField(max_length=255, null=True)
     user_agent = models.CharField(max_length=255, null=True)
+    vapid_public_key = models.CharField(max_length=96, null=True)  # only used by WebPush, so we have to allow null
+
 
 class ConnectionFlag(models.Model):
     hostname = models.CharField(primary_key=True, max_length=255)

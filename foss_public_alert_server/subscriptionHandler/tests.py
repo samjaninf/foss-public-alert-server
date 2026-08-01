@@ -217,7 +217,7 @@ class SubscriptionHandlerTestsCase(TestCase):
         for token in invalid_tokens:
             data["token"] = token
             data["push_service"] = "UNIFIED_PUSH"
-            response = self.client.put('/subscription/', json.dumps(data), content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
+            response = self.client.put(f'/subscription/?subscription_id={sub_id}', json.dumps(data), content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
             self.assertEqual(response.status_code, 400)
 
         data["token"] = "https://unifiedpush.kde.org/upezVkNWZjNTM5?up=1"
@@ -231,7 +231,7 @@ class SubscriptionHandlerTestsCase(TestCase):
         for token in invalid_tokens:
             data["token"] = token
             data["push_service"] = "UNIFIED_PUSH_ENCRYPTED"
-            response = self.client.put('/subscription/', json.dumps(data), content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
+            response = self.client.put(f'/subscription/?subscription_id={sub_id}', json.dumps(data), content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
             self.assertEqual(response.status_code, 400)
 
     def test_expire(self):
@@ -284,3 +284,40 @@ class SubscriptionHandlerTestsCase(TestCase):
         self.assertEqual(Subscription.objects.count(), prev_count + 2)
         self.assertIsNotNone(Subscription.objects.get(id=subNew.id))
         self.assertIsNotNone(Subscription.objects.get(id=subAboutToExpire.id))
+
+    def test_vapid_pub_key(self):
+        data = {
+            'min_lat': 52.295,
+            'max_lat': 52.789,
+            'min_lon': 8.591,
+            'max_lon': 12.063,
+            'p256dh_key': 'BInn4ytZr6wQ960L3sQ6tfmrQzNQoEhj_I-0i2DRcL-_u0aU2vSgLuhLKyzGnFkmKDhfnZ7pwcsOEsqy-fDbzh0',
+            'auth_key': 'ns9swjbbKTEN12VGW_tJqA',
+            'push_service': 'UNIFIED_PUSH_ENCRYPTED',
+            'token': 'https://unifiedpush.kde.org/upezVkNWZjNTM5?up=1',
+        }
+
+        # current key is being used as default when not set, for backward compatibility
+        response = self.client.post('/subscription/', json.dumps(data), content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
+        self.assertEqual(response.status_code, 200)
+        sub_id = response.json()['subscription_id']
+        self.assertIsNotNone(sub_id)
+        sub = Subscription.objects.get(id=sub_id)
+        self.assertEqual(sub.vapid_public_key, 'BHJnBOSvBJ9Vl0fF44dUFxmr3l-mNSjuAGvIsFKBSWUsBu2-v2dov1UcGgE2Ry_yjJsz38F3a0A-QrAjCr3OCA4')
+
+        # update retains existing vapid key
+        response = self.client.put(f'/subscription/?subscription_id={sub_id}', json.dumps(data),
+                                   content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
+        self.assertEqual(response.status_code, 200)
+        sub = Subscription.objects.get(id=sub_id)
+        self.assertEqual(sub.vapid_public_key, 'BHJnBOSvBJ9Vl0fF44dUFxmr3l-mNSjuAGvIsFKBSWUsBu2-v2dov1UcGgE2Ry_yjJsz38F3a0A-QrAjCr3OCA4')
+
+        # an explicitly specified but unknown vapid key is rejected
+        data['vapid_public_key'] = "SomeUnknownKey"
+        response = self.client.post('/subscription/', json.dumps(data), content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
+        self.assertContains(response, "unknown VAPID key", status_code=400)
+
+        # same for updates
+        response = self.client.put(f'/subscription/?subscription_id={sub_id}', json.dumps(data),
+                                   content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
+        self.assertContains(response, "unknown VAPID key", status_code=400)

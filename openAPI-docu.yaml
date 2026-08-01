@@ -369,6 +369,9 @@ components:
         auth_key:
           type: string
           description: 16 byte authentication secret according to RFC 8291, in Base64 URL encoding. (Only for UNIFIED_PUSH_ENCRYPTED).
+        vapid_public_key:
+          type: string
+          description: VAPID public key used by the client, in Base64 URL encoding. (Only for UNIFIED_PUSH_ENCRYPTED).
 
 
     alert_request:
