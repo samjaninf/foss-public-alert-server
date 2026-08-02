@@ -28,7 +28,7 @@ class LUAlertParser(AbstractCAPParser):
             except Exception:
                 pass
 
-            filenames.append(f"dump-alert.{alerts['identifier'].split('.')[1]}.xml")
+            filenames.append(f"dump-alert.{alerts['_id'].split('.')[1]}.xml")
 
         metadata: dict = requests.get("https://data.public.lu/api/1/datasets/alertes-du-systeme-lu-alert/").json()
         for resource in metadata["resources"]:
