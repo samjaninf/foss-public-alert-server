@@ -11,7 +11,7 @@ from alertHandler.models import Alert
 from requests import ReadTimeout, RequestException, HTTPError, ConnectionError
 
 from .exceptions import PushNotificationException, PushNotificationExpiredException
-from .models import Subscription
+from .models import ConnectionFlag, Subscription
 from configuration.models import AppSetting
 from .push_notification_services import unified_push, apn, firebase, unified_push_encrpted
 
@@ -170,3 +170,12 @@ def check_for_alerts_and_send_notifications(alert: Alert, is_update: bool = Fals
         )
         # @TODO(Nucleus): check performance
     pass
+
+
+@shared_task(name="task.expire_connection_flags")
+def expire_connection_flags() -> None:
+    """
+    Delete old connection flag table entries to prevent that from growing without bounds.
+    """
+    cutoff_time = datetime.now(timezone.utc) - timedelta(days=60)
+    ConnectionFlag.objects.filter(set_time_stamp__lt=cutoff_time).delete()

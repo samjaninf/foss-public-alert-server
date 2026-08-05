@@ -85,6 +85,10 @@ app.conf.beat_schedule = {
         'schedule': crontab(minute="*/5"),
         'enabled': True
     },
+    'expire_connection_flags': {
+        'task': 'task.expire_connection_flags',
+        'schedule': crontab(minute="0", hour="0"),
+    },
 }
 
 app.conf.timezone = 'UTC' # @todo fix timezone
