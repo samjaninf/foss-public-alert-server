@@ -207,7 +207,12 @@ DEFAULT_SETTINGS = [
 WEB_PUSH_CONFIG_PRIVATE_KEY = os.environ.get('WEB_PUSH_CONFIG_PRIVATE_KEY', 'tiQpqhJBxAAEwxbDQ2OYiQoJ1j18NLEn-Qm09oxte0Q')
 WEB_PUSH_CONFIG_PUBLIC_KEY = os.environ.get('WEB_PUSH_CONFIG_PUBLIC_KEY', 'BHJnBOSvBJ9Vl0fF44dUFxmr3l-mNSjuAGvIsFKBSWUsBu2-v2dov1UcGgE2Ry_yjJsz38F3a0A-QrAjCr3OCA4')
 
-WEB_PUSH_CONTACT =  os.environ.get("WEB_PUSH_CONTACT", "mailto:todo@example.com")
+# previously used VAPID keys that are rotated out of service but still have active subscriptions
+# both arrays must use the same order, ie. matching private and public keys must be at the same position
+WEB_PUSH_CONFIG_LEGACY_PRIVATE_KEYS = []
+WEB_PUSH_CONFIG_LEGACY_PUBLIC_KEYS = []
+
+WEB_PUSH_CONTACT = os.environ.get("WEB_PUSH_CONTACT", "mailto:todo@example.com")
 
 # Logging config
 

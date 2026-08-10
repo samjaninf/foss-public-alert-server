@@ -48,7 +48,18 @@ def create_subscription(token, bbox, data, user_agent):
                         vapid_public_key=vapid_public_key)
 
 
-def send_notification(endpoint, payload, auth_key, p256dh_key, persist_failures: bool = True) -> Response or None:
+def get_vapid_private_key(vapid_public_key: str) -> str:
+    """
+    Returns the VAPID private key for the given public key
+    """
+    if settings.WEB_PUSH_CONFIG_PUBLIC_KEY == vapid_public_key:
+        return settings.WEB_PUSH_CONFIG_PRIVATE_KEY
+
+    idx = settings.WEB_PUSH_CONFIG_LEGACY_PUBLIC_KEYS.index(vapid_public_key)
+    return settings.WEB_PUSH_CONFIG_LEGACY_PRIVATE_KEYS[idx] if idx is not None else None
+
+
+def send_notification(endpoint, payload, auth_key, p256dh_key, vapid_public_key, persist_failures: bool = True) -> Response or None:
     """
     Send a webpush notification to the given endpoint with the given payload
     :param endpoint: the webpush endpoint
@@ -82,7 +93,7 @@ def send_notification(endpoint, payload, auth_key, p256dh_key, persist_failures:
 
         return webpush(subscription_info,
                        payload,
-                       vapid_private_key=settings.WEB_PUSH_CONFIG_PRIVATE_KEY,
+                       vapid_private_key=get_vapid_private_key(vapid_public_key),
                        vapid_claims=claims,
                        timeout=10,
                        requests_session=session)

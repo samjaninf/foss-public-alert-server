@@ -245,6 +245,7 @@ class SubscriptionHandlerTestsCase(TestCase):
             last_heartbeat=datetime.datetime(2025, 1, 1, 12, 43, 56, 0, datetime.timezone.utc),
             p256dh_key="BInn4ytZr6wQ960L3sQ6tfmrQzNQoEhj_I-0i2DRcL-_u0aU2vSgLuhLKyzGnFkmKDhfnZ7pwcsOEsqy-fDbzh0",
             auth_key="ns9swjbbKTEN12VGW_tJqA",
+            vapid_public_key="BHJnBOSvBJ9Vl0fF44dUFxmr3l-mNSjuAGvIsFKBSWUsBu2-v2dov1UcGgE2Ry_yjJsz38F3a0A-QrAjCr3OCA4",
             user_agent="FPAS/1.0.0 (testing)"
         )
         subOld.save()
@@ -255,6 +256,7 @@ class SubscriptionHandlerTestsCase(TestCase):
             last_heartbeat=datetime.datetime.now(datetime.timezone.utc),
             p256dh_key="BInn4ytZr6wQ960L3sQ6tfmrQzNQoEhj_I-0i2DRcL-_u0aU2vSgLuhLKyzGnFkmKDhfnZ7pwcsOEsqy-fDbzh0",
             auth_key="ns9swjbbKTEN12VGW_tJqA",
+            vapid_public_key="BHJnBOSvBJ9Vl0fF44dUFxmr3l-mNSjuAGvIsFKBSWUsBu2-v2dov1UcGgE2Ry_yjJsz38F3a0A-QrAjCr3OCA4",
             user_agent="FPAS/1.0.0 (testing)"
         )
         subNew.save()
@@ -266,6 +268,7 @@ class SubscriptionHandlerTestsCase(TestCase):
             last_heartbeat=datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=11),
             p256dh_key="BInn4ytZr6wQ960L3sQ6tfmrQzNQoEhj_I-0i2DRcL-_u0aU2vSgLuhLKyzGnFkmKDhfnZ7pwcsOEsqy-fDbzh0",
             auth_key="ns9swjbbKTEN12VGW_tJqA",
+            vapid_public_key="BHJnBOSvBJ9Vl0fF44dUFxmr3l-mNSjuAGvIsFKBSWUsBu2-v2dov1UcGgE2Ry_yjJsz38F3a0A-QrAjCr3OCA4",
             user_agent="FPAS/1.0.0 (testing)"
         )
         subJustExpired.save()
@@ -276,6 +279,7 @@ class SubscriptionHandlerTestsCase(TestCase):
             last_heartbeat=datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=9),
             p256dh_key="BInn4ytZr6wQ960L3sQ6tfmrQzNQoEhj_I-0i2DRcL-_u0aU2vSgLuhLKyzGnFkmKDhfnZ7pwcsOEsqy-fDbzh0",
             auth_key="ns9swjbbKTEN12VGW_tJqA",
+            vapid_public_key="BHJnBOSvBJ9Vl0fF44dUFxmr3l-mNSjuAGvIsFKBSWUsBu2-v2dov1UcGgE2Ry_yjJsz38F3a0A-QrAjCr3OCA4",
             user_agent="FPAS/1.0.0 (testing)"
         )
         subAboutToExpire.save()

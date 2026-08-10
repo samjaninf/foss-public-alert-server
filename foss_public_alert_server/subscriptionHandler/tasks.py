@@ -48,7 +48,8 @@ def remove_old_subscription():
                     unified_push_encrpted.send_notification(subscription.token,
                                                             json.dumps(msg),
                                                             auth_key=subscription.auth_key,
-                                                            p256dh_key=subscription.p256dh_key)
+                                                            p256dh_key=subscription.p256dh_key,
+                                                            vapid_public_key=subscription.vapid_public_key)
                 case subscription.PushServices.APN:
                     apn.send_notification(subscription.token, "", "", "", "", "")
                 case subscription.PushServices.FIREBASE:
@@ -140,7 +141,8 @@ def send_one_notification(self, subscription_id, msg)  -> None:
                 unified_push_encrpted.send_notification(subscription.token,
                                                         json.dumps(msg),
                                                         auth_key=subscription.auth_key,
-                                                        p256dh_key=subscription.p256dh_key)
+                                                        p256dh_key=subscription.p256dh_key,
+                                                        vapid_public_key=subscription.vapid_public_key)
             case subscription.PushServices.APN:
                 apn.send_notification(subscription.token, "", "", "", "", "")
             case subscription.PushServices.FIREBASE:

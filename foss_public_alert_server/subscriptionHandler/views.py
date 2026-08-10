@@ -174,6 +174,7 @@ def add_new_subscription(request):
                                                     json.dumps(msg),
                                                     auth_key=s.auth_key,
                                                     p256dh_key=s.p256dh_key,
+                                                    vapid_public_key=s.vapid_public_key,
                                                     persist_failures=False)
             case "APN":
                 s = apn.create_subscription()
