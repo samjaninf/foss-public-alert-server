@@ -131,7 +131,7 @@ def send_notification(endpoint, payload, auth_key, p256dh_key, vapid_public_key,
         raise PushNotificationException("failure")
 
 
-def update_subscription(token, data, subscription_id: str) -> HttpResponse:
+def update_subscription(subscription, data, subscription_id: str) -> HttpResponse:
     """
     Update the push notification config for the given subscription.
 
@@ -141,24 +141,26 @@ def update_subscription(token, data, subscription_id: str) -> HttpResponse:
     add that in the future.
 
     Also reset the error counter to zero as the config is refreshed.
-    :param request: the http request with the p256dh_key and the auth_key
-    :param token: the new UnifiedPush token for the subscription
+    :param subscription: the Subscription object to update
+    :param data: the decoded HTTP request body
     :param subscription_id: the id of the subscription to update
     :return: HttpResponseBadRequest if there are missing parameters / invalid input, HttpResponse if the update was successful.
     """
+    token = data.get("token")
     p256dh_key = data.get("p256dh_key")
     auth_key = data.get("auth_key")
     vapid_public_key = data.get("vapid_public_key")
     if p256dh_key is None or auth_key is None:
         return HttpResponseBadRequest('invalid or missing parameters')
+    # check that newly provided VAPID key is the current one
     if vapid_public_key is not None and vapid_public_key != settings.WEB_PUSH_CONFIG_PUBLIC_KEY:
-        return HttpResponseBadRequest('unknown VAPID key')
-    try:
-        if vapid_public_key is not None:
-            Subscription.objects.filter(id=subscription_id).update(token=token, auth_key=auth_key, p256dh_key=p256dh_key, vapid_public_key=vapid_public_key)
-        else:
-            Subscription.objects.filter(id=subscription_id).update(token=token, auth_key=auth_key, p256dh_key=p256dh_key)
-        return HttpResponse("Subscription and push config successfully updated")
-    except Exception as e:
-        logger.error(f"Can not update subscription: {e}")
-        return HttpResponseBadRequest("invalid input")
+        return HttpResponse('unknown VAPID key', status=401)
+    # if no VAPID key is provided, refuse the update if the current one is unknown
+    if vapid_public_key is None and get_vapid_private_key(subscription.vapid_public_key) is None:
+        return HttpResponse('expired VAPID key', status=401)
+
+    if vapid_public_key is not None:
+        subscription.vapid_public_key = vapid_public_key
+    subscription.token = token
+    subscription.auth_key = auth_key
+    subscription.p256dh_key = p256dh_key

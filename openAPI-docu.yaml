@@ -122,6 +122,10 @@ paths:
                     example: "successfully updated"
         '400':
           description: "Invalid input"
+        '401':
+          description: Unknown or invalid VAPID public key, either provided in this request or as part of the existing subscription.
+            This can happen as part of VAPID key rotations, clients are expected to retrieve the current VAPID key in this case and
+            update the subscription accordingly.
         '404':
           description: "Subscription has expired. You must register again!"
         '405':

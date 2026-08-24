@@ -168,7 +168,7 @@ class SubscriptionHandlerTestsCase(TestCase):
     def test_update_subscription_invalid_subscription_id(self):
         response = self.client.put(f'/subscription/?subscription_id=invalid',
                                    content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
-        self.assertContains(response, 'invalid input', status_code=400)
+        self.assertEqual(response.status_code, 404)
 
     def test_update_subscription_old_subscription_id(self):
         response = self.client.put(f'/subscription/?subscription_id=e1ce46fb-a885-4b26-5ba8-708cccfcfa2b',
@@ -324,4 +324,4 @@ class SubscriptionHandlerTestsCase(TestCase):
         # same for updates
         response = self.client.put(f'/subscription/?subscription_id={sub_id}', json.dumps(data),
                                    content_type="application/json", headers={"user_agent": "FPAS/1.0.0 (testing)"})
-        self.assertContains(response, "unknown VAPID key", status_code=400)
+        self.assertContains(response, "unknown VAPID key", status_code=401)

@@ -229,6 +229,7 @@ def unsubscribe(request):
     except Subscription.DoesNotExist:
         return HttpResponseNotFound("Subscription not found")
 
+
 @require_http_methods(["PUT"])
 def update_subscription(request):
     """
@@ -239,22 +240,18 @@ def update_subscription(request):
     """
     # check parameter of request
     subscription_id = request.GET.get('subscription_id')
-    user_agent = None
-    try:
-        user_agent = request.META['HTTP_USER_AGENT']
-    except KeyError:
-        pass
-
     if subscription_id is None:
         return HttpResponseBadRequest('invalid or missing parameters')
 
     # check if subscription is still active
     try:
-        if Subscription.objects.filter(id=subscription_id).update(last_heartbeat=datetime.now(timezone.utc), user_agent=user_agent) == 0:
-            return HttpResponseNotFound("Subscription has expired. You must register again!")
-    except Exception as e:
-        logger.error(f"Can not update subscription: {e}")
-        return HttpResponseBadRequest("invalid input")
+        s = Subscription.objects.get(id=subscription_id)
+    except Exception:
+        return HttpResponseNotFound("Subscription has expired. You must register again!")
+
+    s.last_heartbeat = datetime.now(timezone.utc)
+    if 'HTTP_USER_AGENT' in request.META:
+        s.user_agent = request.META['HTTP_USER_AGENT']
 
     # if request contains token, handle update request
     data = {}
@@ -265,34 +262,34 @@ def update_subscription(request):
         pass
     token = data.get("token")
 
-    if token is None:
-        # if token is none, the request is just to update the subscription
-        return HttpResponse("Subscription successfully updated")
-    else:
-        try:
-            push_service = Subscription.objects.get(id=subscription_id).push_service
+    res = None
+    try:
+        # call the push notification handler
+        match s.push_service:
+            case Subscription.PushServices.UNIFIED_PUSH:
+                if token is not None:
+                    validateUnifiedPushToken(token)
+                    res = unified_push.update_subscription(s, token)
+            case Subscription.PushServices.UNIFIED_PUSH_ENCRYPTED:
+                if token is not None:
+                    validateUnifiedPushToken(token)
+                res = unified_push_encrpted.update_subscription(s, data, subscription_id)
+            case Subscription.PushServices.APN:
+                res = apn.update_subscription(data)
+            case Subscription.PushServices.FIREBASE:
+                res = firebase.update_subscription(data)
+            case _:
+                logger.debug("Not supported push service")
+                return HttpResponseBadRequest('something went wrong')
+        s.save()
+    except UnifiedPushTokenValidationException as e:
+        logger.debug(f"Invalid UnifiedPush token update: {token} - {e.reason}")
+        return HttpResponseBadRequest(e.reason)
+    except Exception as e:
+        logger.error(f"Can not update subscription push notification config: {e}")
+        return HttpResponseBadRequest("Error while updating push notification config.")
+    return res if res is not None else HttpResponse("Subscription successfully updated")
 
-            # call the push notification handler
-            match push_service:
-                case Subscription.PushServices.UNIFIED_PUSH:
-                    validateUnifiedPushToken(token)
-                    return unified_push.update_subscription(data)
-                case Subscription.PushServices.UNIFIED_PUSH_ENCRYPTED:
-                    validateUnifiedPushToken(token)
-                    return unified_push_encrpted.update_subscription(token, data, subscription_id)
-                case Subscription.PushServices.APN:
-                    return apn.update_subscription(data)
-                case Subscription.PushServices.FIREBASE:
-                    return firebase.update_subscription(data)
-                case _:
-                    logger.debug("Not supported push service")
-                    return HttpResponseBadRequest('something went wrong')
-        except UnifiedPushTokenValidationException as e:
-            logger.debug(f"Invalid UnifiedPush token update: {token} - {e.reason}")
-            return HttpResponseBadRequest(e.reason)
-        except Exception as e:
-            logger.error(f"Can not update subscription push notification config: {e}")
-            return HttpResponseBadRequest("Error while updating push notification config.")
 
 @require_http_methods(["GET"])
 def handle_subscription_config_request(request):
